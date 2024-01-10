@@ -12,6 +12,9 @@ var (
 	websocketUpgrader = websocket.Upgrader{
 		ReadBufferSize: 1024,
 		WriteBufferSize: 1014,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
 	}
 )
 
@@ -24,13 +27,23 @@ func NewManager() *Manager {
 }
 
 func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
-	log.Println("new connection")
+    // Set CORS headers
+    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "authentication, content-type")
 
-	conn, err := websocketUpgrader.Upgrade(w, r, nil)
+    if r.Method == http.MethodOptions {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
 
-	if err != nil {
-		log.Println(err)
-	}
+    log.Println("new connection")
 
-	fmt.Print(conn)
+    conn, err := websocketUpgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    fmt.Print(conn)
 }

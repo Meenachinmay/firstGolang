@@ -1,17 +1,27 @@
 package main
 
-import "net/http"
-import "log"
+import (
+	"fmt"
+	"log"
+	"net/http"
 
-func main () {
-  setupAPI()
+	"github.com/gorilla/mux"
+  "github.com/gorilla/handlers"
+)
 
-  log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func setupAPI() {
+func main() {
+  router := mux.NewRouter()
   manager := NewManager()
+  router.HandleFunc("/ws", manager.serveWS).Methods(http.MethodGet, http.MethodOptions)
 
-  http.Handle("/", http.FileServer(http.Dir("./frontend")))
-  http.HandleFunc("/ws", manager.serveWS)
+  corsOptions := handlers.AllowedOrigins([]string{"http://localhost:3000"})
+  corsHandler := handlers.CORS(corsOptions)
+
+  server := http.Server{
+      Addr:    ":8080",
+      Handler: corsHandler(router),
+  }
+
+  fmt.Println("server listening on port 8080")
+  log.Fatal(server.ListenAndServe())
 }
