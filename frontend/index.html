@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
   <head>
@@ -18,6 +18,19 @@
         <label for="chatroom">Chatroom:</label>
         <input type="text" id="chatroom" name="chatroom" /> <br><br>
         <input type="submit" value="Change Chatroom"/>
+      </form>
+
+      <br>
+
+      <textarea class="messagearea" id="chatmessages" readonly name="chatmessages" rows="4" cols="50" 
+        placeholder="Enter your message"></textarea>
+    
+      <br>
+
+      <form id="chatroom-message">
+        <label for="message">Message:</label>
+        <input type="text" id="message" name="message"/><br><br>
+        <input type="submit" value="Send message" />
       </form>
 
     </div>
