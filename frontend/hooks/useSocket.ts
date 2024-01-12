@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export const useWebSocket = (url: string) => {
+export const useWebSocket = (url: string, onMessageReceived: any) => {
     const socket = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
@@ -18,6 +18,12 @@ export const useWebSocket = (url: string) => {
             setIsConnected(false);
             console.log('WebSocket disconnected');
         };
+
+        socket.current.onmessage = (evt) => {
+            if (onMessageReceived) {
+                onMessageReceived(evt.data);
+            }
+        }
 
         socket.current.onerror = (error) => {
             console.error('WebSocket error:', error);

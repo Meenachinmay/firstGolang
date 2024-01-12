@@ -53,6 +53,8 @@ func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
 
     // start  client processes
     go client.readMessages()
+    // start sending / writing message to the client
+    go client.writeMessages()
 }
 
 // to add a new connection to managers

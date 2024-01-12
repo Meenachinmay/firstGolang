@@ -2,7 +2,7 @@
 
 import { useWebSocket } from "@/hooks/useSocket";
 import { IMessage } from "@/types/message";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { useForm } from "react-hook-form";
 
@@ -21,12 +21,21 @@ const messages: IMessage[] = [
 ];
 
 export default function Chat() {
-  const { socket, isConnected, sendMessage} = useWebSocket("ws://localhost:8080/ws");
   const { handleSubmit, register } = useForm();
 
-  const onSubmit = (data: any) => {
+  const handleMessageReceived = useCallback((data: any) => {
     console.log(data);
-    sendMessage(data.message)
+  }, []); // Add dependencies if any
+
+  // consuming websockets
+  const { socket, isConnected, sendMessage } = useWebSocket(
+    "ws://localhost:8080/ws",
+    handleMessageReceived
+  );
+
+  // react-hook-form onSubmit method
+  const onSubmit = (data: any) => {
+    sendMessage(data.message);
   };
 
   useEffect(() => {
@@ -34,6 +43,7 @@ export default function Chat() {
       console.log("Connected to the server");
     }
   }, [isConnected, socket]);
+
   return (
     <>
       <main className="flex flex-row bg-gray-700 w-full h-screen p-[24px]">
@@ -67,9 +77,9 @@ export default function Chat() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-row w-full h-[70px] rounded-md space-x-1">
               <input
-              {...register("message", {
-                required: "It is required to enter a message"
-              })}
+                {...register("message", {
+                  required: "It is required to enter a message",
+                })}
                 type="text"
                 placeholder="Enter your message..."
                 className="text-sm font-light w-full p-3 focus:outline-none text-gray-700 bg-white"
