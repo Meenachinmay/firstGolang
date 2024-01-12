@@ -21,11 +21,12 @@ const messages: IMessage[] = [
 ];
 
 export default function Chat() {
-  const [socket, isConnected] = useWebSocket("ws://localhost:8080/ws");
-  const { handleSubmit } = useForm();
+  const { socket, isConnected, sendMessage} = useWebSocket("ws://localhost:8080/ws");
+  const { handleSubmit, register } = useForm();
 
   const onSubmit = (data: any) => {
     console.log(data);
+    sendMessage(data.message)
   };
 
   useEffect(() => {
@@ -66,6 +67,9 @@ export default function Chat() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-row w-full h-[70px] rounded-md space-x-1">
               <input
+              {...register("message", {
+                required: "It is required to enter a message"
+              })}
                 type="text"
                 placeholder="Enter your message..."
                 className="text-sm font-light w-full p-3 focus:outline-none text-gray-700 bg-white"

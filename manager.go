@@ -50,6 +50,9 @@ func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
 
     client := NewClient(conn, m)
     m.addClient(client)
+
+    // start  client processes
+    go client.readMessages()
 }
 
 // to add a new connection to managers
