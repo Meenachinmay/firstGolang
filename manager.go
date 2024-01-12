@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -19,11 +19,14 @@ var (
 )
 
 type Manager struct {
-
+    clients ClientList
+    sync.RWMutex
 }
 
 func NewManager() *Manager {
-	return &Manager{}
+	return &Manager{
+        clients: make(ClientList),
+    }
 }
 
 func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
@@ -45,5 +48,25 @@ func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    fmt.Print(conn)
+    client := NewClient(conn, m)
+    m.addClient(client)
+}
+
+// to add a new connection to managers
+func (m *Manager) addClient (client *Client) {
+    m.Lock()
+    defer m.Unlock()
+
+    m.clients[client] = true
+}
+
+// to remove a connection from manager
+func (m *Manager) removeClient(client *Client) {
+    m.Lock()
+    defer m.Unlock()
+
+    if _, ok := m.clients[client]; ok {
+        client.connection.Close()
+        delete(m.clients, client)
+    }
 }
