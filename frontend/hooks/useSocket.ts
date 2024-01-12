@@ -1,8 +1,10 @@
+import { NewMessage } from '@/app/chat/page';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export const useWebSocket = (url: string, onMessageReceived: any) => {
+export const useWebSocket = <T,>(url: string) => {
     const socket = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [latestMessage, setLatestMessage] = useState<T | null>(null);
 
     useEffect(() => {
         // Initialize WebSocket connection
@@ -20,9 +22,13 @@ export const useWebSocket = (url: string, onMessageReceived: any) => {
         };
 
         socket.current.onmessage = (evt) => {
-            if (onMessageReceived) {
-                onMessageReceived(evt.data);
-            }
+           try {
+            const data: T = JSON.parse(evt.data);
+            setLatestMessage(data);  
+
+           } catch (error) {
+            console.error("Failed to parse message: ", error);          
+           }
         }
 
         socket.current.onerror = (error) => {
@@ -38,11 +44,11 @@ export const useWebSocket = (url: string, onMessageReceived: any) => {
     }, [url]);
 
     // function to send messages to the server
-    const sendMessage = useCallback((message: string) => {
+    const sendMessage = useCallback((data: NewMessage) => {
         if (socket.current && isConnected) {
-            socket.current.send(message);
+            socket.current.send(JSON.stringify(data));
         }
     }, [isConnected]);
 
-    return {socket: socket.current, isConnected, sendMessage};
+    return {socket: socket.current, isConnected, sendMessage, latestMessage};
 };

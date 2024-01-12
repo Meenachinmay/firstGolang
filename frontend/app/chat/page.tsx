@@ -2,7 +2,7 @@
 
 import { useWebSocket } from "@/hooks/useSocket";
 import { IMessage } from "@/types/message";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
 
@@ -20,23 +20,39 @@ const messages: IMessage[] = [
   },
 ];
 
+export interface NewMessage {
+  message: string;
+  timeStamp: Date;
+}
+
 export default function Chat() {
-  const { handleSubmit, register } = useForm();
-
-  const handleMessageReceived = useCallback((data: any) => {
-    console.log(data);
-  }, []); // Add dependencies if any
-
   // consuming websockets
-  const { socket, isConnected, sendMessage } = useWebSocket(
-    "ws://localhost:8080/ws",
-    handleMessageReceived
-  );
+  const { socket, isConnected, sendMessage, latestMessage } =
+    useWebSocket<NewMessage>("ws://localhost:8080/ws");
+
+  const { handleSubmit, register } = useForm();
+  const [message, setMessage] = useState<NewMessage | null>(null);
 
   // react-hook-form onSubmit method
   const onSubmit = (data: any) => {
-    sendMessage(data.message);
+    const finalData: NewMessage = {
+      message: data.message,
+      timeStamp: new Date(),
+    };
+
+    sendMessage(finalData);
+    data.message = '';
+
   };
+
+  useEffect(() => {
+
+    if (latestMessage) {
+      console.log(latestMessage);
+      setMessage(latestMessage);
+    }
+
+  }, [latestMessage]);
 
   useEffect(() => {
     if (isConnected) {
@@ -57,22 +73,13 @@ export default function Chat() {
         {/* RIGHT */}
         <div className="flex flex-col w-full bg-cyan-100 rounded-r-md p-3 space-y-3 h-full">
           <div className="flex flex-col bg-[#242424] w-full h-full rounded-md p-3 space-y-2">
-            {messages.map((message) => (
-              <div
-                key={message.sender}
-                className={`flex flex-row items-center space-x-2 ${
-                  message.sender === "me" ? "bg-[#575757]" : "bg-[#9ed2d9]"
-                } p-3 rounded-md`}
-              >
-                <p
-                  className={`${
-                    message.sender === "me" ? "text-slate-200" : "text-gray-700"
-                  } text-sm w-auto font-normal`}
-                >
-                  {message.message}
-                </p>
-              </div>
-            ))}
+            <div
+              className={`flex flex-row items-center space-x-2 bg-[#575757] p-3 rounded-md`}
+            >
+              <p className={`text-gray-200 text-sm w-auto font-normal`}>
+                {message?.message}
+              </p>
+            </div>
           </div>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-row w-full h-[70px] rounded-md space-x-1">
